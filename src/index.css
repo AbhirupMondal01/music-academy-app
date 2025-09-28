@@ -1,0 +1,12 @@
+
+/* Using Tailwind CSS via CDN in index.html, so this file can be minimal */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: #111827; /* bg-gray-900 */
+  color: white;
+  font-family: sans-serif;
+}
+
