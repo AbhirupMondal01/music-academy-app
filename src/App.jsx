@@ -27,8 +27,6 @@ import {
 
 // --- Helper Functions & Configuration ---
 
-// For the preview environment, we'll use the hardcoded config.
-// The Vercel-ready environment variable config is commented out below for deployment.
 const firebaseConfig = {
     apiKey: "AIzaSyDElzQdprgSfJsGE3I3nTqvIERiAbznCu4",
     authDomain: "music-acadamy-app.firebaseapp.com",
@@ -38,23 +36,6 @@ const firebaseConfig = {
     appId: "1:714753123495:web:968d1d4533586fa46d2782",
     measurementId: "G-F2WH7HFY35"
 };
-
-/*
-// VERCEL DEPLOYMENT CONFIG:
-// When deploying to Vercel, you will use environment variables.
-// The code below is ready for that. You do not need to change it.
-// You will add the variables in the Vercel project settings.
-const firebaseConfig = {
-    apiKey: import.meta.env.VITE_API_KEY,
-    authDomain: import.meta.env.VITE_AUTH_DOMAIN,
-    projectId: import.meta.env.VITE_PROJECT_ID,
-    storageBucket: import.meta.env.VITE_STORAGE_BUCKET,
-    messagingSenderId: import.meta.env.VITE_MESSAGING_SENDER_ID,
-    appId: import.meta.env.VITE_APP_ID,
-    measurementId: import.meta.env.VITE_MEASUREMENT_ID
-};
-*/
-
 
 const appId = 'default-music-app';
 // --- Admin Configuration ---
@@ -71,11 +52,12 @@ const secondaryAuth = getAuth(secondaryApp);
 
 // --- Static Course Data ---
 const COURSES_DATA = [
-    { id: 'vocal-singing', title: 'Vocal / Singing Classes', monthlyFee: 2000 },
-    { id: 'keyboard-piano', title: 'Keyboard / Piano Classes', monthlyFee: 2500 },
-    { id: 'guitar-classes', title: 'Guitar Classes', monthlyFee: 2200 },
-    { id: 'tabla-classes', title: 'Tabla Classes', monthlyFee: 1800 },
-    { id: 'violin-classes', title: 'Violin Classes', monthlyFee: 2500 },
+    { id: 'aalaap', title: 'Aalaap (Beginner Group Classes)', monthlyFee: 700, admissionCharge: 1300 },
+    { id: 'vyakaran', title: 'Vyakaran (Intermediate Group Classes)', monthlyFee: 700, admissionCharge: 1300 },
+    { id: 'vistaar', title: 'Vistaar (Advanced Group Classes)', monthlyFee: 700, admissionCharge: 1300 },
+    { id: 'kalakar', title: 'Kalakar (Advanced Individual Classes)', monthlyFee: 4000, admissionCharge: 0 },
+    { id: 'arpeggio', title: 'Arpeggio (Individual Piano Classes)', monthlyFee: 1000, admissionCharge: 1000 },
+    { id: 'chromatic', title: 'Chromatic (Individual Guitar Classes)', monthlyFee: 700, admissionCharge: 1300 },
 ];
 
 // --- Icon Components ---
@@ -87,6 +69,7 @@ const UserPlusIcon = ({ className }) => <svg className={className} xmlns="http:/
 const Trash2Icon = ({ className }) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>;
 const DollarSignIcon = ({ className }) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>;
 const UsersIcon = ({ className }) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>;
+
 
 // --- UI Components ---
 
@@ -125,7 +108,7 @@ const AuthComponent = () => {
                         muted
                         playsInline
                     />
-                    <h1 className="text-4xl font-bold mt-4">Shurpancham Academy</h1>
+                    <h1 className="text-4xl font-bold mt-4">Shurpancham Music Academy</h1>
                     <p className="text-gray-400">Student & Admin Portal</p>
                 </div>
                 <div className="bg-gray-800 p-8 rounded-lg shadow-2xl">
@@ -192,7 +175,7 @@ const StudentDashboard = ({ user }) => {
                     {enrollments.map(e => (
                         <div key={e.id} className="bg-gray-800 rounded-lg shadow-lg p-6">
                             <h2 className="text-2xl font-bold mb-2">{e.courseTitle}</h2>
-                             <p className="text-sm text-gray-400 mb-4">Plan: {e.planName}</p>
+                            <p className="text-sm text-gray-400 mb-4">Plan: {e.planName}</p>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 my-4 text-center">
                                 <div className="bg-gray-700/50 p-4 rounded-lg"><p className="text-sm text-gray-400">Monthly Fee</p><p className="text-2xl font-bold">₹{e.invoiceAmount.toLocaleString('en-IN')}</p></div>
                                 <div className="bg-green-500/10 p-4 rounded-lg"><p className="text-sm text-green-400">Total Paid</p><p className="text-2xl font-bold text-green-300">₹{e.totalPaid.toLocaleString('en-IN')}</p></div>
@@ -226,6 +209,8 @@ const StudentDashboard = ({ user }) => {
 const AdminDashboard = ({ setView, setSelectedEnrollment }) => {
     const [enrollments, setEnrollments] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState('active');
 
     useEffect(() => {
         const enrollmentsQuery = query(collection(db, `artifacts/${appId}/public/data/enrollments`));
@@ -237,22 +222,55 @@ const AdminDashboard = ({ setView, setSelectedEnrollment }) => {
         return () => unsubscribe();
     }, []);
 
-    const getStatusColor = (status) => {
-        switch (status) {
-            case 'Paid': return 'bg-green-500/10 text-green-400 border-green-500/20';
-            case 'Pending': return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20';
-            default: return 'bg-gray-500/10 text-gray-400 border-gray-500/20';
+    const filteredEnrollments = useMemo(() => {
+        return enrollments
+            .filter(e => {
+                if (statusFilter === 'all') return true;
+                return e.status === statusFilter;
+            })
+            .filter(e => {
+                const term = searchTerm.toLowerCase();
+                return e.studentName?.toLowerCase().includes(term) ||
+                       e.studentEmail?.toLowerCase().includes(term) ||
+                       e.phoneNumber?.includes(term);
+            });
+    }, [enrollments, searchTerm, statusFilter]);
+
+    const handleToggleStatus = async (enrollmentId, currentStatus) => {
+        const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+        const enrollmentRef = doc(db, `artifacts/${appId}/public/data/enrollments`, enrollmentId);
+        try {
+            await updateDoc(enrollmentRef, { status: newStatus });
+        } catch (error) {
+            console.error("Error updating student status:", error);
         }
     };
-
+    
     return (
         <div className="p-4 md:p-8">
-            <div className="flex justify-between items-center mb-8">
+            <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
                 <h1 className="text-3xl font-bold">Student Roster</h1>
-                <button onClick={() => setView('register-student')} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md flex items-center gap-2">
-                    <UserPlusIcon className="w-5 h-5"/> Register Student
-                </button>
+                <div className="flex items-center gap-4">
+                    <input
+                        type="text"
+                        placeholder="Search by name, email, or phone..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="bg-gray-700 border border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full md:w-64"
+                    />
+                    <button onClick={() => setView('register-student')} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md flex items-center gap-2 flex-shrink-0">
+                        <UserPlusIcon className="w-5 h-5"/> Register
+                    </button>
+                </div>
             </div>
+
+             <div className="mb-4 flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-400">Filter by status:</span>
+                <button onClick={() => setStatusFilter('active')} className={`px-3 py-1 text-xs rounded-full ${statusFilter === 'active' ? 'bg-blue-600 text-white' : 'bg-gray-700 hover:bg-gray-600'}`}>Active</button>
+                <button onClick={() => setStatusFilter('inactive')} className={`px-3 py-1 text-xs rounded-full ${statusFilter === 'inactive' ? 'bg-red-600 text-white' : 'bg-gray-700 hover:bg-gray-600'}`}>Inactive</button>
+                <button onClick={() => setStatusFilter('all')} className={`px-3 py-1 text-xs rounded-full ${statusFilter === 'all' ? 'bg-gray-500 text-white' : 'bg-gray-700 hover:bg-gray-600'}`}>All</button>
+            </div>
+
             <div className="bg-gray-800 rounded-lg shadow-lg overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full min-w-max text-left text-sm text-gray-300">
@@ -260,29 +278,29 @@ const AdminDashboard = ({ setView, setSelectedEnrollment }) => {
                             <tr>
                                 <th className="p-4">Student</th>
                                 <th className="p-4">Course</th>
-                                <th className="p-4 text-right">Monthly Fee</th>
-                                <th className="p-4 text-right">Paid</th>
-                                <th className="p-4 text-right">Balance</th>
                                 <th className="p-4 text-center">Status</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {enrollments.map(e => (
-                                <tr key={e.id} className="border-b border-gray-700 hover:bg-gray-700/30 cursor-pointer" onClick={() => { setSelectedEnrollment(e); setView('student-ledger');}}>
-                                    <td className="p-4 font-medium">{e.studentEmail}</td>
-                                    <td className="p-4">{e.courseTitle}</td>
-                                    <td className="p-4 text-right">₹{e.invoiceAmount.toLocaleString('en-IN')}</td>
-                                    <td className="p-4 text-right text-green-400">₹{e.totalPaid.toLocaleString('en-IN')}</td>
-                                    <td className="p-4 text-right font-bold text-red-400">₹{e.balanceDue.toLocaleString('en-IN')}</td>
+                            {filteredEnrollments.map(e => (
+                                <tr key={e.id} className="border-b border-gray-700 hover:bg-gray-700/30">
+                                    <td className="p-4 cursor-pointer" onClick={() => { setSelectedEnrollment(e); setView('student-ledger');}}>
+                                        <p className="font-medium">{e.studentName}</p>
+                                        <p className="text-xs text-gray-400">{e.studentEmail}</p>
+                                        <p className="text-xs text-gray-400">{e.phoneNumber}</p>
+                                    </td>
+                                    <td className="p-4 cursor-pointer" onClick={() => { setSelectedEnrollment(e); setView('student-ledger');}}>{e.courseTitle}</td>
                                     <td className="p-4 text-center">
-                                         <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(e.invoiceStatus)}`}>{e.invoiceStatus}</span>
+                                         <button onClick={() => handleToggleStatus(e.id, e.status)} className={`px-3 py-1 text-xs font-semibold rounded-full capitalize ${e.status === 'active' ? 'bg-green-500/20 text-green-400 hover:bg-green-500/40' : 'bg-red-500/20 text-red-400 hover:bg-red-500/40'}`}>
+                                            {e.status}
+                                        </button>
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
                      {loading && <div className="p-8"><LoadingSpinner /></div>}
-                     {!loading && enrollments.length === 0 && <p className="p-8 text-center text-gray-400">No student enrollments yet.</p>}
+                     {!loading && filteredEnrollments.length === 0 && <p className="p-8 text-center text-gray-400">No students found.</p>}
                 </div>
             </div>
         </div>
@@ -372,7 +390,7 @@ const StudentLedger = ({ enrollment, setView }) => {
                  <p className="text-gray-400">{enrollment.studentEmail} - {enrollment.courseTitle}</p>
                 
                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 my-6 text-center">
-                    <div className="bg-gray-700/50 p-4 rounded-lg"><p className="text-sm text-gray-400">Monthly Fee</p><p className="text-2xl font-bold">₹{enrollment.invoiceAmount.toLocaleString('en-IN')}</p></div>
+                    <div className="bg-gray-700/50 p-4 rounded-lg"><p className="text-sm text-gray-400">Initial Invoice</p><p className="text-2xl font-bold">₹{enrollment.invoiceAmount.toLocaleString('en-IN')}</p></div>
                     <div className="bg-green-500/10 p-4 rounded-lg"><p className="text-sm text-green-400">Total Paid</p><p className="text-2xl font-bold text-green-300">₹{enrollment.totalPaid.toLocaleString('en-IN')}</p></div>
                     <div className="bg-red-500/10 p-4 rounded-lg"><p className="text-sm text-red-400">Balance Due</p><p className="text-2xl font-bold text-red-300">₹{enrollment.balanceDue.toLocaleString('en-IN')}</p></div>
                  </div>
@@ -432,6 +450,7 @@ const RegisterStudent = ({ setView }) => {
     const [studentName, setStudentName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [phoneNumber, setPhoneNumber] = useState('');
     const [selectedCourseId, setSelectedCourseId] = useState(COURSES_DATA[0]?.id || '');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -453,26 +472,24 @@ const RegisterStudent = ({ setView }) => {
             const newUser = userCredential.user;
 
             const selectedCourse = COURSES_DATA.find(c => c.id === selectedCourseId);
-            const fee = selectedCourse.monthlyFee;
+            const initialInvoiceAmount = selectedCourse.monthlyFee + selectedCourse.admissionCharge;
             
-            const batch = writeBatch(db);
             const enrollmentRef = doc(collection(db, `artifacts/${appId}/public/data/enrollments`));
-            batch.set(enrollmentRef, {
+            await setDoc(enrollmentRef, {
                 studentId: newUser.uid,
                 studentEmail: email,
                 studentName: studentName,
+                phoneNumber: phoneNumber,
                 courseId: selectedCourse.id,
                 courseTitle: selectedCourse.title,
-                planName: 'Monthly Plan',
-                paymentPlan: 'monthly',
+                status: 'active', // Set status to active by default
                 enrolledAt: serverTimestamp(),
-                invoiceStatus: 'Pending',
-                invoiceAmount: fee,
+                invoiceAmount: initialInvoiceAmount,
+                monthlyFee: selectedCourse.monthlyFee,
+                admissionCharge: selectedCourse.admissionCharge,
                 totalPaid: 0,
-                balanceDue: fee,
+                balanceDue: initialInvoiceAmount,
             });
-            
-            await batch.commit();
             
             await signOut(secondaryAuth);
 
@@ -503,13 +520,17 @@ const RegisterStudent = ({ setView }) => {
                         <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500" required/>
                     </div>
                      <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-1">Phone Number</label>
+                        <input type="tel" value={phoneNumber} onChange={e => setPhoneNumber(e.target.value)} className="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500" required/>
+                    </div>
+                     <div>
                         <label className="block text-sm font-medium text-gray-400 mb-1">Initial Password</label>
                         <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500" required/>
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-400 mb-1">Course Discipline</label>
+                        <label className="block text-sm font-medium text-gray-400 mb-1">Course</label>
                         <select value={selectedCourseId} onChange={e => setSelectedCourseId(e.target.value)} className="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            {COURSES_DATA.map(course => <option key={course.id} value={course.id}>{course.title} (₹{course.monthlyFee}/month)</option>)}
+                            {COURSES_DATA.map(course => <option key={course.id} value={course.id}>{course.title} (₹{course.monthlyFee}/mo + ₹{course.admissionCharge} admission)</option>)}
                         </select>
                     </div>
                     <button type="submit" disabled={loading} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition duration-300 disabled:bg-blue-800">
@@ -524,14 +545,13 @@ const RegisterStudent = ({ setView }) => {
 const AdminFinancialsDashboard = () => {
     const [payments, setPayments] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [enrollments, setEnrollments] = useState([]);
 
     useEffect(() => {
-        const enrollmentsQuery = query(collection(db, `artifacts/${appId}/public/data/enrollments`));
-        const unsubscribe = onSnapshot(enrollmentsQuery, async (snapshot) => {
-            const enrollmentsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            setEnrollments(enrollmentsData);
-            
+        const fetchAllPayments = async () => {
+            const enrollmentsQuery = query(collection(db, `artifacts/${appId}/public/data/enrollments`));
+            const enrollmentsSnapshot = await getDocs(enrollmentsQuery);
+            const enrollmentsData = enrollmentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
             let allPayments = [];
             for (const enrollment of enrollmentsData) {
                 const paymentsQuery = query(collection(db, `artifacts/${appId}/public/data/enrollments/${enrollment.id}/payments`));
@@ -545,8 +565,8 @@ const AdminFinancialsDashboard = () => {
             }
             setPayments(allPayments);
             setLoading(false);
-        });
-        return () => unsubscribe();
+        };
+        fetchAllPayments();
     }, []);
 
     const monthlyStats = useMemo(() => {
@@ -617,7 +637,6 @@ const AdminFinancialsDashboard = () => {
     );
 };
 
-
 // --- Main App Component ---
 
 export default function App() {
@@ -679,7 +698,7 @@ export default function App() {
                                 muted
                                 playsInline
                              />
-                            <span className="text-xl font-bold">Shurpancham</span>
+                            <span className="text-xl font-bold">Shurpancham Music Academy</span>
                         </div>
                         <ul className="flex justify-around w-full lg:flex-col lg:space-y-3">
                             {isAdmin ? (
