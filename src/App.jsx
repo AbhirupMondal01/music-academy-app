@@ -176,7 +176,7 @@ const StudentDashboard = ({ user }) => {
                     {enrollments.map(e => (
                         <div key={e.id} className="bg-gray-800 rounded-lg shadow-lg p-6">
                             <h2 className="text-2xl font-bold mb-2">{e.courseTitle}</h2>
-                             <p className="text-sm text-gray-400 mb-4">Plan: {e.planName}</p>
+                            <p className="text-sm text-gray-400 mb-4">Plan: {e.planName}</p>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 my-4 text-center">
                                 <div className="bg-gray-700/50 p-4 rounded-lg"><p className="text-sm text-gray-400">Monthly Fee</p><p className="text-2xl font-bold">₹{e.invoiceAmount.toLocaleString('en-IN')}</p></div>
                                 <div className="bg-green-500/10 p-4 rounded-lg"><p className="text-sm text-green-400">Total Paid</p><p className="text-2xl font-bold text-green-300">₹{e.totalPaid.toLocaleString('en-IN')}</p></div>
@@ -822,5 +822,4 @@ export default function App() {
         </div>
     );
 }
-
 
