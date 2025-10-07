@@ -6,23 +6,21 @@ import {
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
     signOut,
-    reauthenticateWithCredential,
-    EmailAuthProvider
+    sendPasswordResetEmail
 } from 'firebase/auth';
 import {
     getFirestore,
     collection,
     doc,
     setDoc,
-    getDocs,
     onSnapshot,
-    writeBatch,
     updateDoc,
     query,
     where,
     serverTimestamp,
     increment,
-    deleteDoc
+    deleteDoc,
+    getDocs
 } from 'firebase/firestore';
 
 // --- Helper Functions & Configuration ---
@@ -39,7 +37,7 @@ const firebaseConfig = {
 
 const appId = 'default-music-app';
 // --- Admin Configuration ---
-const ADMIN_UIDS = ['jkFnWhZyv0evMPAYI0qLY9hNSO42'];
+const ADMIN_UIDS = ['jkFnWhZyv0evMPAYI0qLY9hNSO42', 'FrBKqEXGKkZdg7Etliq6uxIR7WH3'];
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -69,7 +67,8 @@ const UserPlusIcon = ({ className }) => <svg className={className} xmlns="http:/
 const Trash2Icon = ({ className }) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>;
 const DollarSignIcon = ({ className }) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>;
 const UsersIcon = ({ className }) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>;
-
+const EditIcon = ({ className }) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>;
+const SendIcon = ({ className }) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>;
 
 // --- UI Components ---
 
@@ -101,7 +100,7 @@ const AuthComponent = () => {
                 <div className="text-center mb-8">
                     <video
                         src="https://video.wixstatic.com/video/81702c_6268d3f9e3fa4e99a1bb9e7846488aa8/360p/mp4/file.mp4"
-                        alt="Shurpancham Academy Logo"
+                        alt="Shurpancham Music Academy Logo"
                         className="w-24 h-24 mx-auto rounded-full object-cover shadow-lg"
                         autoPlay
                         loop
@@ -175,7 +174,7 @@ const StudentDashboard = ({ user }) => {
                     {enrollments.map(e => (
                         <div key={e.id} className="bg-gray-800 rounded-lg shadow-lg p-6">
                             <h2 className="text-2xl font-bold mb-2">{e.courseTitle}</h2>
-                            <p className="text-sm text-gray-400 mb-4">Plan: {e.planName}</p>
+                             <p className="text-sm text-gray-400 mb-4">Plan: {e.planName}</p>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 my-4 text-center">
                                 <div className="bg-gray-700/50 p-4 rounded-lg"><p className="text-sm text-gray-400">Monthly Fee</p><p className="text-2xl font-bold">₹{e.invoiceAmount.toLocaleString('en-IN')}</p></div>
                                 <div className="bg-green-500/10 p-4 rounded-lg"><p className="text-sm text-green-400">Total Paid</p><p className="text-2xl font-bold text-green-300">₹{e.totalPaid.toLocaleString('en-IN')}</p></div>
@@ -211,6 +210,7 @@ const AdminDashboard = ({ setView, setSelectedEnrollment }) => {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('active');
+    const [notification, setNotification] = useState('');
 
     useEffect(() => {
         const enrollmentsQuery = query(collection(db, `artifacts/${appId}/public/data/enrollments`));
@@ -236,18 +236,35 @@ const AdminDashboard = ({ setView, setSelectedEnrollment }) => {
             });
     }, [enrollments, searchTerm, statusFilter]);
 
-    const handleToggleStatus = async (enrollmentId, currentStatus) => {
+    const handleToggleStatus = async (e, enrollmentId, currentStatus) => {
+        e.stopPropagation(); // Prevent row click
         const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
         const enrollmentRef = doc(db, `artifacts/${appId}/public/data/enrollments`, enrollmentId);
         try {
             await updateDoc(enrollmentRef, { status: newStatus });
+            setNotification(`Student status updated to ${newStatus}.`);
         } catch (error) {
             console.error("Error updating student status:", error);
+            setNotification('Failed to update status.');
         }
+        setTimeout(() => setNotification(''), 3000);
     };
     
+    const handleSendPasswordReset = async (e, email) => {
+        e.stopPropagation(); // Prevent row click
+        try {
+            await sendPasswordResetEmail(auth, email);
+            setNotification(`Password reset email sent to ${email}.`);
+        } catch (error) {
+            console.error("Error sending password reset email:", error);
+            setNotification('Failed to send email.');
+        }
+        setTimeout(() => setNotification(''), 3000);
+    };
+
     return (
         <div className="p-4 md:p-8">
+            {notification && <div className="fixed top-5 right-5 bg-blue-600 text-white py-2 px-4 rounded-lg shadow-lg animate-pulse">{notification}</div>}
             <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
                 <h1 className="text-3xl font-bold">Student Roster</h1>
                 <div className="flex items-center gap-4">
@@ -278,7 +295,7 @@ const AdminDashboard = ({ setView, setSelectedEnrollment }) => {
                             <tr>
                                 <th className="p-4">Student</th>
                                 <th className="p-4">Course</th>
-                                <th className="p-4 text-center">Status</th>
+                                <th className="p-4 text-center">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -291,9 +308,13 @@ const AdminDashboard = ({ setView, setSelectedEnrollment }) => {
                                     </td>
                                     <td className="p-4 cursor-pointer" onClick={() => { setSelectedEnrollment(e); setView('student-ledger');}}>{e.courseTitle}</td>
                                     <td className="p-4 text-center">
-                                         <button onClick={() => handleToggleStatus(e.id, e.status)} className={`px-3 py-1 text-xs font-semibold rounded-full capitalize ${e.status === 'active' ? 'bg-green-500/20 text-green-400 hover:bg-green-500/40' : 'bg-red-500/20 text-red-400 hover:bg-red-500/40'}`}>
-                                            {e.status}
-                                        </button>
+                                         <div className="flex justify-center items-center gap-3">
+                                            <button onClick={(event) => { setSelectedEnrollment(e); setView('edit-student'); event.stopPropagation();}} className="p-2 rounded-md hover:bg-gray-600 text-blue-400" title="Edit Student"><EditIcon className="w-4 h-4"/></button>
+                                            <button onClick={(event) => handleToggleStatus(event, e.id, e.status)} className={`px-3 py-1 text-xs font-semibold rounded-full capitalize ${e.status === 'active' ? 'bg-green-500/20 text-green-400 hover:bg-green-500/40' : 'bg-red-500/20 text-red-400 hover:bg-red-500/40'}`}>
+                                                {e.status}
+                                            </button>
+                                             <button onClick={(event) => handleSendPasswordReset(event, e.studentEmail)} className="p-2 rounded-md hover:bg-gray-600 text-gray-400" title="Send Password Reset Email"><SendIcon className="w-4 h-4"/></button>
+                                         </div>
                                     </td>
                                 </tr>
                             ))}
@@ -636,6 +657,61 @@ const AdminFinancialsDashboard = () => {
         </div>
     );
 };
+const EditStudent = ({ enrollment, setView }) => {
+    const [studentName, setStudentName] = useState(enrollment.studentName || '');
+    const [phoneNumber, setPhoneNumber] = useState(enrollment.phoneNumber || '');
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
+
+    const handleUpdate = async (e) => {
+        e.preventDefault();
+        setError('');
+        setLoading(true);
+
+        const enrollmentRef = doc(db, `artifacts/${appId}/public/data/enrollments`, enrollment.id);
+        try {
+            await updateDoc(enrollmentRef, {
+                studentName: studentName,
+                phoneNumber: phoneNumber
+            });
+            alert('Student details updated successfully!');
+            setView('admin-dashboard');
+        } catch (err) {
+            setError("Update failed: " + err.message);
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="p-4 md:p-8">
+            <button onClick={() => setView('admin-dashboard')} className="flex items-center text-blue-400 hover:text-blue-300 mb-6"> <ChevronLeftIcon className="w-5 h-5 mr-1" /> Back to Roster </button>
+            <div className="max-w-lg mx-auto bg-gray-800 rounded-lg shadow-lg p-8">
+                <h1 className="text-2xl font-bold mb-6">Edit Student Details</h1>
+                <p className="text-sm text-gray-400 mb-4">Editing details for: <span className="font-semibold">{enrollment.studentEmail}</span></p>
+                {error && <p className="bg-red-500/20 text-red-400 p-3 rounded-md mb-4 text-sm">{error}</p>}
+                <form onSubmit={handleUpdate} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-1">Student Full Name</label>
+                        <input type="text" value={studentName} onChange={e => setStudentName(e.target.value)} className="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500" required/>
+                    </div>
+                     <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-1">Phone Number</label>
+                        <input type="tel" value={phoneNumber} onChange={e => setPhoneNumber(e.target.value)} className="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500" required/>
+                    </div>
+                     <div className="pt-2">
+                         <p className="text-xs text-gray-500">To change a student's email or password, please ask them to use the password reset link or contact support. For security, these cannot be changed directly.</p>
+                     </div>
+                    <button type="submit" disabled={loading} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition duration-300 disabled:bg-blue-800">
+                        {loading ? 'Saving Changes...' : 'Save Changes'}
+                    </button>
+                </form>
+            </div>
+        </div>
+    );
+};
+
 
 // --- Main App Component ---
 
@@ -674,6 +750,7 @@ export default function App() {
                 case 'admin-dashboard': return <AdminDashboard setView={setView} setSelectedEnrollment={setSelectedEnrollment} />;
                 case 'student-ledger': return <StudentLedger enrollment={selectedEnrollment} setView={setView} />;
                 case 'register-student': return <RegisterStudent setView={setView} />;
+                case 'edit-student': return <EditStudent enrollment={selectedEnrollment} setView={setView} />;
                 case 'financials': return <AdminFinancialsDashboard />;
                 default: return <AdminDashboard setView={setView} setSelectedEnrollment={setSelectedEnrollment}/>;
             }
@@ -703,7 +780,7 @@ export default function App() {
                         <ul className="flex justify-around w-full lg:flex-col lg:space-y-3">
                             {isAdmin ? (
                                 <>
-                                <li> <button onClick={() => setView('admin-dashboard')} className={`flex flex-col lg:flex-row items-center gap-1 lg:gap-4 p-2 lg:p-3 rounded-lg w-full transition-colors duration-200 text-xs lg:text-base ${view.includes('dashboard') || view.includes('ledger') || view.includes('register') ? 'text-blue-400' : 'hover:bg-gray-800 text-gray-400'}`}> <UsersIcon className="w-6 h-6"/> <span className="font-medium">Student Roster</span> </button> </li>
+                                <li> <button onClick={() => setView('admin-dashboard')} className={`flex flex-col lg:flex-row items-center gap-1 lg:gap-4 p-2 lg:p-3 rounded-lg w-full transition-colors duration-200 text-xs lg:text-base ${view.includes('dashboard') || view.includes('ledger') || view.includes('register') || view.includes('edit') ? 'text-blue-400' : 'hover:bg-gray-800 text-gray-400'}`}> <UsersIcon className="w-6 h-6"/> <span className="font-medium">Student Roster</span> </button> </li>
                                 <li> <button onClick={() => setView('financials')} className={`flex flex-col lg:flex-row items-center gap-1 lg:gap-4 p-2 lg:p-3 rounded-lg w-full transition-colors duration-200 text-xs lg:text-base ${view === 'financials' ? 'text-blue-400' : 'hover:bg-gray-800 text-gray-400'}`}> <DollarSignIcon className="w-6 h-6"/> <span className="font-medium">Financials</span> </button> </li>
                                 </>
                             ) : (
@@ -720,5 +797,4 @@ export default function App() {
         </div>
     );
 }
-
 
