@@ -70,6 +70,7 @@ const DollarSignIcon = ({ className }) => <svg className={className} xmlns="http
 const UsersIcon = ({ className }) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>;
 const EditIcon = ({ className }) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>;
 const SendIcon = ({ className }) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>;
+const MoreVerticalIcon = ({ className }) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>;
 
 // --- UI Components ---
 
@@ -175,11 +176,11 @@ const StudentDashboard = ({ user }) => {
                     {enrollments.map(e => (
                         <div key={e.id} className="bg-gray-800 rounded-lg shadow-lg p-6">
                             <h2 className="text-2xl font-bold mb-2">{e.courseTitle}</h2>
-                             <p className="text-sm text-gray-400 mb-4">Plan: Monthly</p>
+                            <p className="text-sm text-gray-400 mb-4">Plan: Monthly</p>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 my-4 text-center">
-                                <div className="bg-gray-700/50 p-4 rounded-lg"><p className="text-sm text-gray-400">Monthly Fee</p><p className="text-2xl font-bold">₹{e.monthlyFee.toLocaleString('en-IN')}</p></div>
-                                <div className="bg-green-500/10 p-4 rounded-lg"><p className="text-sm text-green-400">Total Paid</p><p className="text-2xl font-bold text-green-300">₹{e.totalPaid.toLocaleString('en-IN')}</p></div>
-                                <div className="bg-red-500/10 p-4 rounded-lg"><p className="text-sm text-red-400">Balance Due</p><p className="text-2xl font-bold text-red-300">₹{e.balanceDue.toLocaleString('en-IN')}</p></div>
+                                <div className="bg-gray-700/50 p-4 rounded-lg"><p className="text-sm text-gray-400">Monthly Fee</p><p className="text-2xl font-bold">₹{(e.monthlyFee ?? 0).toLocaleString('en-IN')}</p></div>
+                                <div className="bg-green-500/10 p-4 rounded-lg"><p className="text-sm text-green-400">Total Paid</p><p className="text-2xl font-bold text-green-300">₹{(e.totalPaid ?? 0).toLocaleString('en-IN')}</p></div>
+                                <div className="bg-red-500/10 p-4 rounded-lg"><p className="text-sm text-red-400">Balance Due</p><p className="text-2xl font-bold text-red-300">₹{(e.balanceDue ?? 0).toLocaleString('en-IN')}</p></div>
                             </div>
                             <h3 className="text-xl font-semibold mt-6 mb-3">Payment History</h3>
                             <div className="space-y-2">
@@ -228,7 +229,7 @@ const AdminDashboard = ({ setView, setSelectedEnrollment }) => {
         return enrollments
             .filter(e => {
                 if (statusFilter === 'all') return true;
-                return e.status === statusFilter;
+                return (e.status || 'active') === statusFilter;
             })
             .filter(e => {
                 const term = searchTerm.toLowerCase();
@@ -312,7 +313,7 @@ const AdminDashboard = ({ setView, setSelectedEnrollment }) => {
                                     <td className="p-4 cursor-pointer" onClick={() => { setSelectedEnrollment(e); setView('student-ledger');}}>{e.courseTitle}</td>
                                     <td className="p-4 text-center">
                                         <span className={`px-3 py-1 text-xs font-semibold rounded-full capitalize ${e.status === 'active' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
-                                            {e.status}
+                                            {e.status || 'active'}
                                         </span>
                                     </td>
                                     <td className="p-4 text-center relative">
@@ -322,7 +323,7 @@ const AdminDashboard = ({ setView, setSelectedEnrollment }) => {
                                          {openMenuId === e.id && (
                                             <div className="absolute right-8 top-full mt-2 w-48 bg-gray-700 rounded-md shadow-lg z-10">
                                                 <button onClick={(event) => { setSelectedEnrollment(e); setView('edit-student'); setOpenMenuId(null); event.stopPropagation(); }} className="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-gray-600 flex items-center gap-2"><EditIcon className="w-4 h-4"/> Edit Details</button>
-                                                <button onClick={(event) => {handleToggleStatus(event, e.id, e.status); setOpenMenuId(null);}} className="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-gray-600 flex items-center gap-2">{e.status === 'active' ? 'Deactivate' : 'Activate'}</button>
+                                                <button onClick={(event) => {handleToggleStatus(event, e.id, e.status || 'active'); setOpenMenuId(null);}} className="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-gray-600 flex items-center gap-2">{e.status === 'active' ? 'Deactivate' : 'Activate'}</button>
                                                 <button onClick={(event) => {handleSendPasswordReset(event, e.studentEmail); setOpenMenuId(null);}} className="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-gray-600 flex items-center gap-2"><SendIcon className="w-4 h-4"/> Resend Password</button>
                                             </div>
                                          )}
@@ -378,7 +379,7 @@ const StudentLedger = ({ enrollment, setView }) => {
             });
 
             const enrollmentRef = doc(db, `artifacts/${appId}/public/data/enrollments`, enrollment.id);
-            const newBalance = enrollment.balanceDue - paidAmount;
+            const newBalance = (enrollment.balanceDue ?? 0) - paidAmount;
             
             batch.update(enrollmentRef, {
                 totalPaid: increment(paidAmount),
@@ -401,11 +402,10 @@ const StudentLedger = ({ enrollment, setView }) => {
             batch.delete(paymentRef);
 
             const enrollmentRef = doc(db, `artifacts/${appId}/public/data/enrollments`, enrollment.id);
-            const newBalance = enrollment.balanceDue + payment.amountPaid;
-
+            
             batch.update(enrollmentRef, {
                 totalPaid: increment(-payment.amountPaid),
-                balanceDue: newBalance,
+                balanceDue: increment(payment.amountPaid),
                 invoiceStatus: 'Pending',
             });
             await batch.commit();
@@ -422,9 +422,9 @@ const StudentLedger = ({ enrollment, setView }) => {
                  <p className="text-gray-400">{enrollment.studentEmail} - {enrollment.courseTitle}</p>
                 
                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 my-6 text-center">
-                    <div className="bg-gray-700/50 p-4 rounded-lg"><p className="text-sm text-gray-400">Initial Invoice</p><p className="text-2xl font-bold">₹{enrollment.invoiceAmount.toLocaleString('en-IN')}</p></div>
-                    <div className="bg-green-500/10 p-4 rounded-lg"><p className="text-sm text-green-400">Total Paid</p><p className="text-2xl font-bold text-green-300">₹{enrollment.totalPaid.toLocaleString('en-IN')}</p></div>
-                    <div className="bg-red-500/10 p-4 rounded-lg"><p className="text-sm text-red-400">Balance Due</p><p className="text-2xl font-bold text-red-300">₹{enrollment.balanceDue.toLocaleString('en-IN')}</p></div>
+                    <div className="bg-gray-700/50 p-4 rounded-lg"><p className="text-sm text-gray-400">Initial Invoice</p><p className="text-2xl font-bold">₹{(enrollment.invoiceAmount ?? 0).toLocaleString('en-IN')}</p></div>
+                    <div className="bg-green-500/10 p-4 rounded-lg"><p className="text-sm text-green-400">Total Paid</p><p className="text-2xl font-bold text-green-300">₹{(enrollment.totalPaid ?? 0).toLocaleString('en-IN')}</p></div>
+                    <div className="bg-red-500/10 p-4 rounded-lg"><p className="text-sm text-red-400">Balance Due</p><p className="text-2xl font-bold text-red-300">₹{(enrollment.balanceDue ?? 0).toLocaleString('en-IN')}</p></div>
                  </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
