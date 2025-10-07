@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { initializeApp } from 'firebase/app';
 import {
     getAuth,
@@ -176,7 +176,7 @@ const StudentDashboard = ({ user }) => {
                     {enrollments.map(e => (
                         <div key={e.id} className="bg-gray-800 rounded-lg shadow-lg p-6">
                             <h2 className="text-2xl font-bold mb-2">{e.courseTitle}</h2>
-                            <p className="text-sm text-gray-400 mb-4">Plan: {e.planName}</p>
+                             <p className="text-sm text-gray-400 mb-4">Plan: {e.planName}</p>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 my-4 text-center">
                                 <div className="bg-gray-700/50 p-4 rounded-lg"><p className="text-sm text-gray-400">Monthly Fee</p><p className="text-2xl font-bold">₹{e.invoiceAmount.toLocaleString('en-IN')}</p></div>
                                 <div className="bg-green-500/10 p-4 rounded-lg"><p className="text-sm text-green-400">Total Paid</p><p className="text-2xl font-bold text-green-300">₹{e.totalPaid.toLocaleString('en-IN')}</p></div>
@@ -317,14 +317,14 @@ const AdminDashboard = ({ setView, setSelectedEnrollment }) => {
                                         </span>
                                     </td>
                                     <td className="p-4 text-center relative">
-                                         <button onClick={() => setOpenMenuId(openMenuId === e.id ? null : e.id)} className="p-2 rounded-full hover:bg-gray-600">
+                                         <button onClick={(event) => { setOpenMenuId(openMenuId === e.id ? null : e.id); event.stopPropagation(); }} className="p-2 rounded-full hover:bg-gray-600">
                                             <MoreVerticalIcon className="w-5 h-5"/>
                                          </button>
                                          {openMenuId === e.id && (
-                                            <div className="absolute right-12 top-10 w-48 bg-gray-700 rounded-md shadow-lg z-10">
-                                                <button onClick={() => { setSelectedEnrollment(e); setView('edit-student'); setOpenMenuId(null); }} className="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-gray-600 flex items-center gap-2"><EditIcon className="w-4 h-4"/> Edit Details</button>
-                                                <button onClick={() => {handleToggleStatus(e.id, e.status); setOpenMenuId(null);}} className="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-gray-600 flex items-center gap-2">{e.status === 'active' ? 'Deactivate' : 'Activate'}</button>
-                                                <button onClick={() => {handleSendPasswordReset(e.studentEmail); setOpenMenuId(null);}} className="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-gray-600 flex items-center gap-2"><SendIcon className="w-4 h-4"/> Resend Password</button>
+                                            <div className="absolute right-8 top-full mt-2 w-48 bg-gray-700 rounded-md shadow-lg z-10">
+                                                <button onClick={(event) => { setSelectedEnrollment(e); setView('edit-student'); setOpenMenuId(null); event.stopPropagation(); }} className="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-gray-600 flex items-center gap-2"><EditIcon className="w-4 h-4"/> Edit Details</button>
+                                                <button onClick={(event) => {handleToggleStatus(event, e.id, e.status); setOpenMenuId(null);}} className="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-gray-600 flex items-center gap-2">{e.status === 'active' ? 'Deactivate' : 'Activate'}</button>
+                                                <button onClick={(event) => {handleSendPasswordReset(event, e.studentEmail); setOpenMenuId(null);}} className="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-gray-600 flex items-center gap-2"><SendIcon className="w-4 h-4"/> Resend Password</button>
                                             </div>
                                          )}
                                     </td>
@@ -581,26 +581,28 @@ const AdminFinancialsDashboard = () => {
     const [enrollments, setEnrollments] = useState([]);
 
     useEffect(() => {
-        const enrollmentsQuery = query(collection(db, `artifacts/${appId}/public/data/enrollments`));
-        const unsubscribe = onSnapshot(enrollmentsQuery, async (snapshot) => {
-            const enrollmentsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            setEnrollments(enrollmentsData);
-            
-            let allPayments = [];
-            for (const enrollment of enrollmentsData) {
-                const paymentsQuery = query(collection(db, `artifacts/${appId}/public/data/enrollments/${enrollment.id}/payments`));
-                const paymentsSnapshot = await getDocs(paymentsQuery);
-                const paymentsData = paymentsSnapshot.docs.map(doc => ({
-                    ...doc.data(),
-                    studentEmail: enrollment.studentEmail,
-                    studentId: enrollment.studentId,
-                }));
-                allPayments = [...allPayments, ...paymentsData];
-            }
-            setPayments(allPayments);
-            setLoading(false);
-        });
-        return () => unsubscribe();
+        const fetchAllData = async () => {
+            const enrollmentsQuery = query(collection(db, `artifacts/${appId}/public/data/enrollments`));
+            onSnapshot(enrollmentsQuery, async (snapshot) => {
+                const enrollmentsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                setEnrollments(enrollmentsData);
+                
+                let allPayments = [];
+                for (const enrollment of enrollmentsData) {
+                    const paymentsQuery = query(collection(db, `artifacts/${appId}/public/data/enrollments/${enrollment.id}/payments`));
+                    const paymentsSnapshot = await getDocs(paymentsQuery);
+                    const paymentsData = paymentsSnapshot.docs.map(doc => ({
+                        ...doc.data(),
+                        studentEmail: enrollment.studentEmail,
+                        studentId: enrollment.studentId,
+                    }));
+                    allPayments = [...allPayments, ...paymentsData];
+                }
+                setPayments(allPayments);
+                setLoading(false);
+            });
+        };
+        fetchAllData();
     }, []);
 
     const monthlyStats = useMemo(() => {
@@ -822,4 +824,5 @@ export default function App() {
         </div>
     );
 }
+
 
